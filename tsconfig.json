@@ -13,7 +13,6 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "types": ["vitest/globals"],
     "plugins": [
       {
         "name": "next"
@@ -31,5 +30,10 @@
     ".next/dev/types/**/*.ts",
     "vitest.config.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "src/**/__tests__/**",
+    "src/**/*.test.*",
+    "src/**/*.spec.*"
+  ]
 }

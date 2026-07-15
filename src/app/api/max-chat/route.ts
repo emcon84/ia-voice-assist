@@ -36,13 +36,15 @@ export async function POST(req: NextRequest) {
     let systemPrompt: string;
     let maxTokens = 350;
 
-    if (mode === "onboarding" && projectId) {
+    if (projectId) {
+      // prisma es lazy: no exige DATABASE_URL salvo que realmente se use (con projectId).
       const project = await prisma.project.findUnique({ where: { id: projectId } });
-      systemPrompt = buildOnboardingPrompt(assistant, project?.name ?? "tu caso");
-      maxTokens = 500;
-    } else if (projectId) {
-      const project = await prisma.project.findUnique({ where: { id: projectId } });
-      systemPrompt = buildDynamicPrompt(assistant, userText, project?.context ?? undefined);
+      if (mode === "onboarding") {
+        systemPrompt = buildOnboardingPrompt(assistant, project?.name ?? "tu caso");
+        maxTokens = 500;
+      } else {
+        systemPrompt = buildDynamicPrompt(assistant, userText, project?.context ?? undefined);
+      }
     } else {
       systemPrompt = buildDynamicPrompt(assistant, userText);
     }
