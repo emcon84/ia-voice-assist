@@ -70,17 +70,6 @@ export function buildDynamicPrompt(
 }
 
 /**
- * Arma el prompt COMPLETO con todos los módulos cargados. Para la sesión realtime,
- * que necesita todo el conocimiento de entrada (no hay routing por mensaje).
- */
-export function buildFullPrompt(config: AssistantConfig): string {
-  return [
-    config.persona.basePrompt,
-    ...config.knowledge.modules.map((m) => m.content),
-  ].join("\n\n---\n\n");
-}
-
-/**
  * Arma el prompt de onboarding (entrevista estructurada). Si el asistente no tiene
  * onboarding configurado, degrada a la persona base (chat normal).
  */

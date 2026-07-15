@@ -52,9 +52,7 @@ export interface VoiceConfig {
   ttsVoiceId: string;
   /** Modelo de TTS. Default eleven_turbo_v2_5. */
   ttsModel?: string;
-  /** Voz de OpenAI Realtime. Ej. "echo", "alloy". */
-  realtimeVoice: string;
-  /** Idioma para STT (Whisper). Ej. "es". */
+  /** Idioma para STT (Groq Whisper). Ej. "es". */
   sttLang: string;
   /** Reglas de normalización de texto antes del TTS (siglas, unidades, marca). */
   normalizationRules?: Array<{ pattern: RegExp; replace: string }>;
@@ -83,11 +81,9 @@ export interface LeadsConfig {
 
 /** Modelos de IA usados por este asistente. */
 export interface ModelsConfig {
-  /** Modelo de chat de texto. Ej. "claude-sonnet-4-6". */
+  /** Modelo de chat de texto (Anthropic). Ej. "claude-sonnet-4-6". */
   chat: string;
-  /** Modelo realtime de voz. Ej. "gpt-4o-realtime-preview-2024-12-17". */
-  realtime: string;
-  /** Modelo de STT. Ej. "whisper-large-v3-turbo". */
+  /** Modelo de STT (Groq). Ej. "whisper-large-v3-turbo". */
   stt?: string;
 }
 

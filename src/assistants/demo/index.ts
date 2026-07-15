@@ -70,7 +70,6 @@ export const demoConfig: AssistantConfig = {
     // TODO: reemplazar por una voz masculina propia de Lucas en ElevenLabs.
     ttsVoiceId: "QK4xDwo9ESPHA4JNUpX3",
     ttsModel: "eleven_turbo_v2_5",
-    realtimeVoice: "echo",
     sttLang: "es",
     normalizationRules: [
       { pattern: /\bIIBB\b/g, replace: "Ingresos Brutos" },
@@ -91,7 +90,6 @@ export const demoConfig: AssistantConfig = {
 
   models: {
     chat: "claude-sonnet-4-6",
-    realtime: "gpt-4o-realtime-preview-2024-12-17",
     stt: "whisper-large-v3-turbo",
   },
 };
