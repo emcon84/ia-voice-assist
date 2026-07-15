@@ -5,6 +5,9 @@ import { Phone, PhoneOff, Mic, MicOff, Loader2, Menu, Home, Pencil, Check } from
 import { useMaxAssistant, AssistantState, ConversationMessage } from "@/hooks/useMaxAssistant";
 import ConversationHistory from "./ConversationHistory";
 import { NoCreditsModal } from "./NoCreditsModal";
+import { getActiveAssistant } from "@/assistants/registry";
+
+const assistant = getActiveAssistant();
 
 interface MaxVoiceAssistantProps {
   projectId?: string;
@@ -72,7 +75,7 @@ function Avatar({ state }: { state: AssistantState }) {
         ) : state === "recording" ? (
           <Mic size={52} color="#ffffff" />
         ) : (
-          <span className="font-bold" style={{ fontSize: 64, lineHeight: 1, color: "#ffffff" }}>O</span>
+          <span className="font-bold" style={{ fontSize: 64, lineHeight: 1, color: "#ffffff" }}>{assistant.identity.name.charAt(0)}</span>
         )}
       </motion.div>
     </div>
@@ -83,11 +86,11 @@ function StatusLabel({ state, isActive }: { state: AssistantState; isActive: boo
   const labels: Partial<Record<AssistantState, string>> = {
     recording: "Escuchándote...",
     processing: "Procesando...",
-    speaking: "OMAR está hablando...",
+    speaking: `${assistant.identity.name} está hablando...`,
     error: "Error",
   };
 
-  const label = !isActive ? "Tu asistente de la Unión Agrícola de Avellaneda" : (labels[state] ?? "Listo para escucharte");
+  const label = !isActive ? assistant.identity.tagline : (labels[state] ?? "Listo para escucharte");
 
   return (
     <div className="flex items-center justify-center gap-2 h-5">
@@ -133,7 +136,7 @@ function MessageBubble({ msg }: { msg: ConversationMessage }) {
       >
         {isMax && (
           <span className="text-xs font-semibold block mb-0.5" style={{ color: "var(--primary)" }}>
-            OMAR
+            {assistant.identity.name}
           </span>
         )}
         {msg.text}
@@ -223,7 +226,7 @@ export function MaxVoiceAssistant({
             )}
           </div>
           <p className="text-xs font-semibold" style={{ color: "var(--primary)" }}>
-            Unión Agrícola de Avellaneda
+            {assistant.identity.company}
           </p>
         </div>
         {/* Título */}
@@ -233,7 +236,7 @@ export function MaxVoiceAssistant({
               {mode === "onboarding" ? "Configurando obra" : "Asistente"}
             </p>
             <h1 className="text-xl font-bold truncate" style={{ color: "var(--text)" }}>
-              {projectName ?? "OMAR"}
+              {projectName ?? assistant.identity.name}
             </h1>
           </div>
         </div>
@@ -354,7 +357,7 @@ export function MaxVoiceAssistant({
             >
               <Phone size={28} color="#ffffff" />
             </motion.button>
-            <p className="text-xs" style={{ color: "var(--muted)" }}>Hablar con OMAR</p>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>Hablar con {assistant.identity.name}</p>
           </>
         ) : (
           <div className="flex items-center gap-8">

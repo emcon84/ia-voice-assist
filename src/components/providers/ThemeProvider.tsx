@@ -21,7 +21,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem('ey-theme') as Theme | null
+    const saved = localStorage.getItem('app-theme') as Theme | null
     const initial = saved ?? 'dark'
     setTheme(initial)
     document.documentElement.setAttribute('data-theme', initial)
@@ -32,7 +32,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const next = theme === 'dark' ? 'light' : 'dark'
     setTheme(next)
     document.documentElement.setAttribute('data-theme', next)
-    localStorage.setItem('ey-theme', next)
+    localStorage.setItem('app-theme', next)
   }
 
   if (!mounted) return null

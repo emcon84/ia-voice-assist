@@ -1,13 +1,13 @@
 {
-  "id": "com.uaa.app",
-  "name": "Unión Agrícola de Avellaneda - Asistente Omar",
-  "short_name": "UAA Omar",
-  "description": "Omar, el asistente inteligente de la Unión Agrícola de Avellaneda: hormigón, materiales de construcción y todas las divisiones de la cooperativa",
+  "id": "com.contabia.app",
+  "name": "Contabía - Asistente Lucas",
+  "short_name": "Contabía Lucas",
+  "description": "Lucas, tu asistente contable: monotributo, impuestos, facturación y todo lo de ARCA sin volverte loco.",
   "start_url": "/chat",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0d0e0f",
-  "theme_color": "#005bab",
+  "theme_color": "#0d9488",
   "orientation": "portrait",
   "categories": ["business", "utilities"],
   "icons": [

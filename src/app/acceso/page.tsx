@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lock, ArrowRight } from "lucide-react";
+import { getActiveAssistant } from "@/assistants/registry";
 
 export default function AccesoPage() {
+  const { identity } = getActiveAssistant();
   const [code, setCode] = useState("");
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,10 +55,10 @@ export default function AccesoPage() {
           className="text-2xl font-bold tracking-tight"
           style={{ color: "var(--text)" }}
         >
-          Unión Agrícola de Avellaneda
+          {identity.company}
         </h1>
         <p className="mt-1 text-sm" style={{ color: "var(--muted)" }}>
-          Asistente Omar
+          Asistente {identity.name}
         </p>
         <p className="mt-4 text-sm" style={{ color: "var(--muted)" }}>
           Ingresá el código de acceso para probar la demo.

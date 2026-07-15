@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { getActiveAssistant } from "@/assistants/registry";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -85,15 +86,18 @@ export default function PWAInstaller() {
 
   if (!show) return null;
 
+  const { identity } = getActiveAssistant();
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 shadow-2xl p-4" style={{ borderTopColor: "#005bab" }}>
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 shadow-2xl p-4" style={{ borderTopColor: "var(--primary)" }}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/uaa-logo.png" alt="Unión Agrícola de Avellaneda" className="w-9 h-9 object-contain" />
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-white" style={{ background: "var(--primary)" }}>
+            {identity.name.charAt(0)}
+          </div>
           <div>
-            <p className="font-bold text-gray-900 text-sm leading-tight">Instalar UAA Omar</p>
-            <p className="text-xs text-gray-500">Asistente de la cooperativa</p>
+            <p className="font-bold text-gray-900 text-sm leading-tight">Instalar {identity.name}</p>
+            <p className="text-xs text-gray-500">{identity.tagline}</p>
           </div>
         </div>
         <button onClick={handleDismiss} className="text-gray-400 text-xl leading-none px-1">×</button>
@@ -104,22 +108,22 @@ export default function PWAInstaller() {
           <p className="text-sm font-semibold text-gray-900">Para instalar desde Safari:</p>
           <ol className="space-y-2">
             <li className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full text-xs flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#005bab", color: "#ffffff" }}>1</span>
+              <span className="w-5 h-5 rounded-full text-xs flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--primary)", color: "#ffffff" }}>1</span>
               <span className="text-sm text-gray-700">Tocá <span className="text-base">📤</span> (el botón de abajo al centro)</span>
             </li>
             <li className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full text-xs flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#005bab", color: "#ffffff" }}>2</span>
+              <span className="w-5 h-5 rounded-full text-xs flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--primary)", color: "#ffffff" }}>2</span>
               <span className="text-sm text-gray-700">Desplazá el menú hacia abajo</span>
             </li>
             <li className="flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full text-xs flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "#005bab", color: "#ffffff" }}>3</span>
+              <span className="w-5 h-5 rounded-full text-xs flex items-center justify-center flex-shrink-0" style={{ backgroundColor: "var(--primary)", color: "#ffffff" }}>3</span>
               <span className="text-sm text-gray-700">Tocá <strong>&quot;Agregar a inicio&quot;</strong></span>
             </li>
           </ol>
           <button
             onClick={handleDismiss}
             className="w-full border py-2 rounded-lg text-sm font-semibold"
-            style={{ borderColor: "#005bab", color: "#005bab" }}
+            style={{ borderColor: "var(--primary)", color: "var(--primary)" }}
           >
             Ya lo hice
           </button>
@@ -129,7 +133,7 @@ export default function PWAInstaller() {
           <button
             onClick={handleInstall}
             className="flex-1 py-2 rounded-lg text-sm font-semibold"
-            style={{ backgroundColor: "#005bab", color: "#ffffff" }}
+            style={{ backgroundColor: "var(--primary)", color: "#ffffff" }}
           >
             Instalar app
           </button>

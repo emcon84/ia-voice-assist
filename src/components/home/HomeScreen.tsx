@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { FolderPlus, MessageCircle, Folder, ChevronRight, Trash2 } from "lucide-react";
 import { useProjects } from "@/hooks/useProjects";
+import { getActiveAssistant } from "@/assistants/registry";
 
 interface RecentChat {
   id: string;
@@ -13,6 +14,7 @@ interface RecentChat {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { identity } = getActiveAssistant();
   const { projects, loading, fetchProjects, createProject, deleteProject } = useProjects();
   const [recentChats, setRecentChats] = useState<RecentChat[]>([]);
   const [creatingProject, setCreatingProject] = useState(false);
@@ -60,11 +62,11 @@ export default function HomeScreen() {
         className="mb-8"
       >
         <p className="text-xs uppercase tracking-widest mb-1" style={{ color: "var(--muted)" }}>
-          Asistente técnico
+          {identity.company}
         </p>
-        <h1 className="text-4xl font-bold" style={{ color: "var(--text)" }}>OMAR</h1>
+        <h1 className="text-4xl font-bold" style={{ color: "var(--text)" }}>{identity.name}</h1>
         <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
-          Tu asistente de la Unión Agrícola de Avellaneda
+          {identity.tagline}
         </p>
       </motion.div>
 
@@ -121,7 +123,7 @@ export default function HomeScreen() {
               className="flex-1 py-2 rounded-lg text-sm font-semibold"
               style={{ background: "var(--primary)", color: "#ffffff" }}
             >
-              Crear y configurar con OMAR
+              Crear y configurar con {identity.name}
             </button>
             <button
               onClick={() => { setCreatingProject(false); setNewProjectName(""); }}
@@ -132,7 +134,7 @@ export default function HomeScreen() {
             </button>
           </div>
           <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
-            OMAR te va a hacer preguntas para entender el contexto y personalizar el asesoramiento.
+            {identity.name} te va a hacer preguntas para entender el contexto y personalizar el asesoramiento.
           </p>
         </motion.div>
       )}
@@ -222,7 +224,7 @@ export default function HomeScreen() {
                 <MessageCircle size={28} style={{ color: "var(--primary)" }} />
               </div>
               <p className="text-base font-semibold mb-2" style={{ color: "var(--text)" }}>
-                Bienvenido a OMAR
+                Bienvenido a {identity.name}
               </p>
               <p className="text-sm" style={{ color: "var(--muted)" }}>
                 Creá una carpeta para asesoramiento con contexto, o iniciá un chat rápido.

@@ -2,35 +2,40 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import PWAInstaller from "@/components/pwa/PWAInstaller";
+import BrandingStyle from "@/components/branding/BrandingStyle";
+import { getActiveAssistant } from "@/assistants/registry";
+
+const assistant = getActiveAssistant();
+const { name, company, tagline } = assistant.identity;
+const title = `${company} - Asistente ${name}`;
+const description = `${name}, ${tagline}.`;
 
 export const metadata: Metadata = {
-  title: "Unión Agrícola de Avellaneda - Asistente Omar",
-  description:
-    "Omar, el asistente de la Unión Agrícola de Avellaneda: hormigón, materiales de construcción y todas las divisiones de la cooperativa",
+  title,
+  description,
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "UAA Omar",
+    title: `${company} ${name}`,
   },
   formatDetection: {
     telephone: false,
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_BASE_URL || "https://yapurlearning.vercel.app",
+    process.env.NEXT_PUBLIC_BASE_URL || assistant.branding.baseUrl,
   ),
   openGraph: {
-    title: "Unión Agrícola de Avellaneda - Asistente Omar",
-    description:
-      "Omar, el asistente de la Unión Agrícola de Avellaneda: hormigón, materiales de construcción y todas las divisiones de la cooperativa",
+    title,
+    description,
     url: "/",
-    siteName: "Unión Agrícola de Avellaneda",
+    siteName: company,
     images: [
       {
         url: "/icons/icon-512x512.png",
         width: 512,
         height: 512,
-        alt: "Unión Agrícola de Avellaneda - Asistente Omar",
+        alt: title,
       },
     ],
     locale: "es_AR",
@@ -38,15 +43,14 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Unión Agrícola de Avellaneda - Asistente Omar",
-    description:
-      "Omar, el asistente de la Unión Agrícola de Avellaneda: hormigón, materiales de construcción y todas las divisiones de la cooperativa",
+    title,
+    description,
     images: ["/icons/icon-512x512.png"],
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#005bab",
+  themeColor: assistant.branding.colors.primary,
   width: "device-width",
   initialScale: 1,
 };
@@ -61,6 +65,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <BrandingStyle />
       </head>
       <body>
         <ThemeProvider>
