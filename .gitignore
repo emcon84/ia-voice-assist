@@ -1,0 +1,26 @@
+.next/
+node_modules/
+out/
+build/
+.env
+.env.local
+.DS_Store
+bun.lockb
+
+# next-pwa generated files
+public/sw.js
+public/workbox-*.js
+public/worker-*.js
+public/fallback-*.js
+
+# clerk configuration (can include secrets)
+/.clerk/
+
+# typescript incremental build cache (generated)
+*.tsbuildinfo
+
+# generated / runtime artifacts
+coverage/
+*.log
+.atl/
+emails/

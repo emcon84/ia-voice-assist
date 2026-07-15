@@ -1,0 +1,6 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Union Agricola de Avellaneda mark: blue square + white UAA -->
+  <rect width="512" height="512" fill="#005bab" rx="80"/>
+  <text x="256" y="332" font-family="Arial, Helvetica, sans-serif" font-size="180"
+        font-weight="700" fill="#ffffff" text-anchor="middle">UAA</text>
+</svg>

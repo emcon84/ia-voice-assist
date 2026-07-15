@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:16-alpine
+    container_name: yapur-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-yapur}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-yapurpassword}
+      POSTGRES_DB: ${POSTGRES_DB:-yapurlearning}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5544}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-yapur}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js Application
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - DATABASE_URL=${DATABASE_URL:-postgresql://yapur:yapurpassword@db:5432/yapurlearning}
+    container_name: yapur-web
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-postgresql://yapur:yapurpassword@db:5432/yapurlearning}
+      # NextAuth
+      AUTH_SECRET: ${AUTH_SECRET:-d3b0848d539d24c00b6124d7542271e252d8e8ece4f9f9aa97e5f0b73304c3c7}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+      # Stripe
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_PRICE_ID: ${STRIPE_PRICE_ID:-}
+      # App
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+    ports:
+      - "3000:3000"
+
+  # Prisma Migration Runner (run once)
+  db-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yapur-migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://yapur:yapurpassword@db:5432/yapurlearning}
+    entrypoint: ["bunx", "prisma", "db", "push", "--url", "postgresql://yapur:yapurpassword@db:5432/yapurlearning"]
+    restart: "no"
+
+volumes:
+  postgres_data:

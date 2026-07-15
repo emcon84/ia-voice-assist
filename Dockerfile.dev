@@ -1,0 +1,22 @@
+# Dockerfile para desarrollo - con hot reload
+FROM oven/bun:1-alpine
+
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL:-postgresql://yapur:yapurpassword@db:5432/yapurlearning}
+
+WORKDIR /app
+
+# Copiar solo package.json primero para cachear dependencias
+COPY package.json bun.lock ./
+
+# Instalar dependencias
+RUN bun install
+
+# Copiar el resto del código
+COPY . .
+
+# Exponer puerto
+EXPOSE 3000
+
+# CMD para desarrollo - primero genera prisma, luego corre dev
+CMD ["sh", "-c", "bunx prisma generate && bun run dev"]

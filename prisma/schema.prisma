@@ -1,0 +1,204 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Note: For Prisma 5, we use the DATABASE_URL env var directly
+// No need for prisma.config.ts
+
+// Enums
+enum Role {
+  ADMIN
+  USER
+}
+
+enum CourseStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum LessonType {
+  THEORY
+  VIDEO
+  INTERACTIVE
+  QUIZ
+}
+
+// User - extends NextAuth authentication
+model User {
+  id        String   @id @default(cuid()) // Auto-generated ID
+  email     String   @unique
+  name      String?
+  password  String?  // For credentials provider (nullable for OAuth)
+  role      Role     @default(USER)
+  image     String?  // For OAuth avatar
+  clerkId   String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  courses        Course[]       @relation("CourseAuthor")
+  enrollments    Enrollment[]
+  lessonProgress LessonProgress[]
+  conversations  Conversation[]
+  projects       Project[]
+
+  @@map("users")
+}
+
+// Module - groups courses
+model Module {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  order       Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  courses Course[]
+
+  @@map("modules")
+}
+
+// Course - the main course entity
+model Course {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  price       Decimal?     @db.Decimal(10, 2) // null = free
+  status      CourseStatus @default(DRAFT)
+  order       Int
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  authorId    String
+  author      User   @relation("CourseAuthor", fields: [authorId], references: [id])
+
+  moduleId    String
+  module      Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  lessons     Lesson[]
+  enrollments Enrollment[]
+
+  @@index([status])
+  @@index([moduleId])
+  @@map("courses")
+}
+
+// Lesson - individual lessons within a course
+model Lesson {
+  id        String     @id @default(cuid())
+  title     String
+  content   Json       // Flexible content structure for different lesson types
+  type      LessonType
+  order     Int
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  progress LessonProgress[]
+
+  @@index([courseId])
+  @@map("lessons")
+}
+
+// Enrollment - tracks user purchases/enrollments
+model Enrollment {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+
+  // Relations
+  userId          String
+  user            User   @relation(fields: [userId], references: [id])
+
+  courseId        String
+  course          Course @relation(fields: [courseId], references: [id])
+
+  stripePaymentId String?  // Null for free courses
+  amount          Decimal? @db.Decimal(10, 2) // Amount paid, null for free
+
+  @@unique([userId, courseId]) // One enrollment per user per course
+  @@index([userId])
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+// LessonProgress - tracks individual lesson completion
+model LessonProgress {
+  id          String    @id @default(cuid())
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  lessonId    String
+  lesson      Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId]) // One progress record per user per lesson
+  @@index([userId])
+  @@map("lesson_progress")
+}
+
+// Chat history models
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String?
+  projectId String?
+  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  name      String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@index([userId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           MessageRole
+  content        String
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+model Project {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  context       String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  conversations Conversation[]
+
+  @@index([userId])
+  @@map("projects")
+}
