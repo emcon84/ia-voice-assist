@@ -63,8 +63,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        {/* Favicon y apple-icon los genera Next dinámicamente (app/icon.tsx, app/apple-icon.tsx). */}
         <BrandingStyle />
       </head>
       <body>
