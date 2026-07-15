@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { buildDynamicPrompt, getLoadedModules } from "@/lib/knowledge-router";
-import { buildOnboardingPrompt } from "@/data/knowledge";
+import {
+  getActiveAssistant,
+  buildDynamicPrompt,
+  buildOnboardingPrompt,
+  getLoadedModuleIds,
+} from "@/assistants/registry";
 import prisma from "@/infrastructure/database/prisma";
 
 export const runtime = "nodejs";
@@ -26,24 +30,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "ANTHROPIC_API_KEY not set" }, { status: 500 });
     }
 
+    const assistant = getActiveAssistant();
+    const userText = messages.map((m) => m.content).join(" ");
+
     let systemPrompt: string;
     let maxTokens = 350;
 
     if (mode === "onboarding" && projectId) {
       const project = await prisma.project.findUnique({ where: { id: projectId } });
-      systemPrompt = buildOnboardingPrompt(project?.name ?? "obra");
+      systemPrompt = buildOnboardingPrompt(assistant, project?.name ?? "tu caso");
       maxTokens = 500;
     } else if (projectId) {
       const project = await prisma.project.findUnique({ where: { id: projectId } });
-      systemPrompt = buildDynamicPrompt(messages, project?.context ?? undefined);
+      systemPrompt = buildDynamicPrompt(assistant, userText, project?.context ?? undefined);
     } else {
-      systemPrompt = buildDynamicPrompt(messages);
+      systemPrompt = buildDynamicPrompt(assistant, userText);
     }
 
     // Log en dev para ver qué módulos se cargaron
     if (process.env.NODE_ENV === "development") {
-      const loaded = getLoadedModules(messages);
-      console.log(`[OMAR] Módulos cargados: ${loaded.join(", ")} | Tokens estimados: ~${Math.round(systemPrompt.length / 4)}`);
+      const loaded = getLoadedModuleIds(assistant, userText);
+      console.log(`[${assistant.identity.name}] Módulos cargados: ${loaded.join(", ") || "solo base"} | Tokens estimados: ~${Math.round(systemPrompt.length / 4)}`);
     }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -55,7 +62,7 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
+        model: assistant.models.chat,
         max_tokens: maxTokens,
         system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
         messages: messages.map((m) => ({ role: m.role, content: m.content })),

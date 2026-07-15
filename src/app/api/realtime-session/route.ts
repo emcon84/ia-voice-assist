@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { buildFullOmarPrompt } from "@/data/knowledge";
+import { getActiveAssistant, buildFullPrompt } from "@/assistants/registry";
 
 export const runtime = "nodejs";
 
@@ -8,6 +8,8 @@ export async function POST() {
   if (!apiKey) {
     return NextResponse.json({ error: "OPENAI_API_KEY not set" }, { status: 500 });
   }
+
+  const assistant = getActiveAssistant();
 
   const response = await fetch("https://api.openai.com/v1/realtime/client_secrets", {
     method: "POST",
@@ -18,11 +20,11 @@ export async function POST() {
     body: JSON.stringify({
       session: {
         type: "realtime",
-        model: "gpt-4o-realtime-preview-2024-12-17",
-        instructions: buildFullOmarPrompt(),
+        model: assistant.models.realtime,
+        instructions: buildFullPrompt(assistant),
         audio: {
           output: {
-            voice: "echo",
+            voice: assistant.voice.realtimeVoice,
           },
         },
       },

@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
+import { getActiveAssistant } from "@/assistants/registry";
 
 export const runtime = "nodejs";
 
-const VOICE_ID = "QK4xDwo9ESPHA4JNUpX3";
-
-function normalizeForTTS(text: string): string {
-  return text
+function normalizeForTTS(
+  text: string,
+  brandRules: Array<{ pattern: RegExp; replace: string }> = []
+): string {
+  // Reglas específicas de la marca activa primero (siglas propias del negocio).
+  const withBrand = brandRules.reduce(
+    (acc, { pattern, replace }) => acc.replace(pattern, replace),
+    text
+  );
+  return withBrand
     // Siglas de la institución: leer el nombre completo, no deletrear "u a a"
     .replace(/\bUAA\b/g, "Unión Agrícola de Avellaneda")
     // Direcciones: "N°"/"Nº"/"Nro" → "número"; "Av." → "Avenida"
@@ -65,8 +72,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "ELEVENLABS_API_KEY not set" }, { status: 500 });
     }
 
+    const assistant = getActiveAssistant();
+
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${assistant.voice.ttsVoiceId}`,
       {
         method: "POST",
         headers: {
@@ -74,8 +83,8 @@ export async function POST(req: Request) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: normalizeForTTS(text),
-          model_id: "eleven_turbo_v2_5",
+          text: normalizeForTTS(text, assistant.voice.normalizationRules),
+          model_id: assistant.voice.ttsModel ?? "eleven_turbo_v2_5",
           voice_settings: {
             stability: 0.5,
             similarity_boost: 0.75,
