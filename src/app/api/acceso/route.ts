@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getActiveAssistant } from "@/assistants/registry";
 
 export const runtime = "nodejs";
-
-// Código de acceso de la demo. Se lee de env; si no está, usa un default
-// para que la demo funcione out-of-the-box. Cambialo por cliente.
-const DEMO_CODE = process.env.DEMO_ACCESS_CODE || "hormigonar2026";
 
 export async function POST(req: NextRequest) {
   try {
     const { code } = (await req.json()) as { code?: string };
 
-    if (!code || code.trim() !== DEMO_CODE) {
+    // El código de acceso viene de la config del asistente activo.
+    // Así cada marca tiene su propio código sin tocar rutas.
+    const config = getActiveAssistant();
+
+    if (!code || code.trim() !== config.branding.accessCode) {
       return NextResponse.json({ ok: false }, { status: 401 });
     }
 
