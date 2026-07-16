@@ -5,6 +5,7 @@ import {
   buildOnboardingPrompt,
   getLoadedModuleIds,
 } from "@/assistants/registry";
+import { webSearchService } from "@/services/webSearchService";
 import prisma from "@/infrastructure/database/prisma";
 
 export const runtime = "nodejs";
@@ -49,10 +50,34 @@ export async function POST(req: NextRequest) {
       systemPrompt = buildDynamicPrompt(assistant, userText);
     }
 
+    // --- BÚSQUEDA WEB INTELIGENTE ---
+    // Detecta consultas MUY específicas (listados, precios, disponibilidad, datos
+    // actualizados de productos/servicios) y busca en la web para dar información real.
+    // Es genérica para cualquier negocio: no está atada a un sitio en particular.
+    let webResults = "";
+
+    if (
+      mode !== "onboarding" &&
+      webSearchService.shouldSearchWebSpecific(userText)
+    ) {
+      try {
+        const results = await webSearchService.searchWeb(userText);
+        if (results.length > 0) {
+          webResults = webSearchService.formatResultsForPrompt(results);
+          systemPrompt += `\n\n---\n\nINFORMACIÓN ENCONTRADA EN LA WEB PARA RESPONDER LA CONSULTA DEL USUARIO:\n${webResults}\n\nIMPORTANTE: Usá esta información cuando sea relevante para la consulta. Si encontrás datos útiles, compartí los links directamente. Si los resultados no responden la consulta exacta, ignorá esta sección y respondé con tu criterio normal.`;
+          maxTokens = Math.max(maxTokens, 500);
+        }
+      } catch (err) {
+        console.error("Web search error:", err);
+        // Si falla la búsqueda, sigue sin resultados — no bloquea la respuesta.
+      }
+    }
+    // --- FIN BÚSQUEDA WEB ---
+
     // Log en dev para ver qué módulos se cargaron
     if (process.env.NODE_ENV === "development") {
       const loaded = getLoadedModuleIds(assistant, userText);
-      console.log(`[${assistant.identity.name}] Módulos cargados: ${loaded.join(", ") || "solo base"} | Tokens estimados: ~${Math.round(systemPrompt.length / 4)}`);
+      console.log(`[${assistant.identity.name}] Módulos cargados: ${loaded.join(", ") || "solo base"} | Tokens estimados: ~${Math.round(systemPrompt.length / 4)} | Web results: ${webResults ? "Sí" : "No"}`);
     }
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -83,9 +108,9 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json();
     const reply = data.content[0]?.text ?? "";
+    const hasWebResults = !!webResults;
 
-    // Demo sin login: no se persiste en DB, el historial vive en el navegador.
-    return NextResponse.json({ reply, conversationId });
+    return NextResponse.json({ reply, conversationId, hasWebResults });
   } catch (error) {
     console.error("OMAR chat error:", error);
     return NextResponse.json({ error: "Chat failed" }, { status: 500 });

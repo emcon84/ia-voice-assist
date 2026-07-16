@@ -152,6 +152,51 @@ class WebSearchService {
     return response;
   }
 
+  /**
+   * Búsqueda web genérica para cualquier dominio.
+   * Si se pasa un site, busca dentro de ese sitio.
+   */
+  async searchWeb(query: string, site?: string): Promise<SearchResult[]> {
+    const searchQuery = site ? `site:${site} ${query}` : query;
+
+    let results: SearchResult[] = [];
+
+    // Intentar Google primero
+    if (googleSearchService.isConfigured()) {
+      try {
+        const googleRes = await googleSearchService.search(searchQuery);
+        results = googleRes.map(r => ({ ...r, confidence: 0.8 }));
+      } catch {
+        console.warn('Google falló en searchWeb, usando DuckDuckGo');
+      }
+    }
+
+    // Fallback a DuckDuckGo si Google no dio resultados
+    if (results.length === 0) {
+      try {
+        const duckRes = await duckDuckGoService.search(searchQuery);
+        results = duckRes.map(r => ({ ...r, source: 'duckduckgo' as const, confidence: 0.6 }));
+      } catch {
+        console.error('DuckDuckGo también falló');
+      }
+    }
+
+    return results.slice(0, 5);
+  }
+
+  /**
+   * Formatea resultados web como texto para inyectar en un prompt.
+   * Sin markdown, en texto plano para asistente de voz.
+   */
+  formatResultsForPrompt(results: SearchResult[], maxResults = 3): string {
+    if (results.length === 0) return '';
+
+    return results
+      .slice(0, maxResults)
+      .map((r, i) => `${i + 1}. ${r.title}: ${r.snippet.trim()} — ${r.url}`)
+      .join('\n');
+  }
+
   // Detectar si la consulta requiere búsqueda web
   shouldSearchWeb(query: string): boolean {
     const searchKeywords = [
@@ -162,6 +207,52 @@ class WebSearchService {
 
     const lowerQuery = query.toLowerCase();
     return searchKeywords.some(keyword => lowerQuery.includes(keyword));
+  }
+
+  /**
+   * Detecta si la consulta requiere información MUY específica que necesita
+   * búsqueda web (listados, precios actuales, disponibilidad, datos concretos
+   * de productos/servicios). Genérica para cualquier rubro.
+   *
+   * Busca al menos 2 señales de "dame datos concretos" para evitar
+   * falsos positivos con charla casual.
+   */
+  shouldSearchWebSpecific(query: string): boolean {
+    const lowerQuery = query.toLowerCase();
+
+    // Palabras que indican que el usuario QUIERE datos específicos
+    const specificKeywords = [
+      'mostrame', 'mostrar', 'mostrame', 'busc', 'hay',
+      'tienen', 'disponible', 'publicad', 'listado',
+      'precio', 'precios', 'cuales', 'cuáles',
+      'catálogo', 'catalogo', 'codigo', 'código',
+      'foto', 'imagen', 'link', 'enlace',
+      'quiero ver', 'necesito', 'busco', 'estoy buscando',
+      'dirección', 'direccion', 'teléfono', 'telefono',
+      'horario', 'horarios', 'ubicación', 'ubicacion',
+      'contacto', 'contactar',
+    ];
+
+    // Rubros específicos por negocio (palabras del dominio)
+    const domainKeywords = [
+      // Inmobiliario
+      'alquiler', 'venta', 'comprar', 'alquilar',
+      'departamento', 'casa', 'duplex', 'dúplex', 'local',
+      'terreno', 'propiedad', 'inmueble', 'cochera',
+      'dormitorio', 'ambiente',
+      // Rubro general
+      'producto', 'servicio', 'precio', 'modelo',
+      'presupuesto', 'cotización', 'cotizacion',
+      'stock', 'disponibilidad',
+    ];
+
+    const specificMatches = specificKeywords.filter(kw => lowerQuery.includes(kw));
+    const domainMatches = domainKeywords.filter(kw => lowerQuery.includes(kw));
+
+    // Necesita al menos 2 señales: ej. "mostrame casas" (mostrame + casa)
+    // o "precios de departamentos" (precios + departamento)
+    return (specificMatches.length >= 1 && domainMatches.length >= 1) ||
+           specificMatches.length >= 2;
   }
 }
 
