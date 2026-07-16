@@ -134,6 +134,28 @@ function StatusLabel({ state, isActive }: { state: AssistantState; isActive: boo
   );
 }
 
+function linkify(text: string) {
+  const parts = text.split(/(https?:\/\/[^\s<]+[^\s<.])/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('http://') || part.startsWith('https://')) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline"
+          style={{ color: 'var(--primary)' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
+    }
+    return part;
+  });
+}
+
 function MessageBubble({ msg }: { msg: ConversationMessage }) {
   const isMax = msg.role === "assistant";
   return (
@@ -159,7 +181,7 @@ function MessageBubble({ msg }: { msg: ConversationMessage }) {
             {assistant.identity.name}
           </span>
         )}
-        {msg.text}
+        {linkify(msg.text)}
       </div>
     </motion.div>
   );
