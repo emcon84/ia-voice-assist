@@ -94,6 +94,10 @@ export const jvConfig: AssistantConfig = {
     normalizationRules: [
       { pattern: /\bJV\b/g, replace: "Jota Vé" },
       { pattern: /\bRE\/MAX\b/g, replace: "Re Max" },
+      // Strip URLs before TTS (URLs are shown in chat, not read aloud)
+      { pattern: /https?:\/\/[^\s]+/g, replace: "" },
+      // Clean up "Link:" remnants after URL removal
+      { pattern: /\s*Link:\s*/gi, replace: " " },
     ],
   },
 
