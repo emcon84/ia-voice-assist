@@ -16,7 +16,7 @@ function stripMarkdown(text: string): string {
 
 const CONTEXT_TAG_RE = /\[CONTEXTO_GENERADO:\s*([\s\S]*?)\]/;
 
-export type AssistantState = "idle" | "recording" | "processing" | "speaking" | "error";
+export type AssistantState = "idle" | "recording" | "searching" | "processing" | "speaking" | "error";
 
 export interface ConversationMessage {
   role: "assistant" | "user";
@@ -141,7 +141,7 @@ export function useMaxAssistant(options: UseMaxAssistantOptions = {}): UseMaxAss
   }, []);
 
   const sendToMax = useCallback(async (userText: string): Promise<void> => {
-    setState("processing");
+    setState("searching");
     setCurrentUserText(userText);
 
     const updated = [...messagesRef.current, { role: "user" as const, text: userText }];
@@ -169,6 +169,8 @@ export function useMaxAssistant(options: UseMaxAssistantOptions = {}): UseMaxAss
         }
         throw new Error(body.error ?? "Chat falló");
       }
+
+      setState("processing");
 
       const { reply, conversationId: returnedConvId } = await res.json();
       if (returnedConvId) conversationIdRef.current = returnedConvId;

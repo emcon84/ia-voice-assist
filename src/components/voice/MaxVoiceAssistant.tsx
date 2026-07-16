@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Phone, PhoneOff, Mic, MicOff, Loader2, Menu, Home, Pencil, Check } from "lucide-react";
+import { Phone, PhoneOff, Mic, MicOff, Loader2, Menu, Home, Pencil, Check, Search } from "lucide-react";
 import { useMaxAssistant, AssistantState, ConversationMessage } from "@/hooks/useMaxAssistant";
 import ConversationHistory from "./ConversationHistory";
 import { NoCreditsModal } from "./NoCreditsModal";
@@ -48,6 +48,23 @@ function AvatarRings({ state }: { state: AssistantState }) {
     );
   }
 
+  if (state === "searching") {
+    return (
+      <>
+        {[0, 1].map((i) => (
+          <motion.div
+            key={i}
+            className="absolute rounded-full"
+            style={{ border: "2px solid #f59e0b" }}
+            initial={{ opacity: 0, scale: 1 }}
+            animate={{ opacity: [0, 0.5, 0], scale: [1, 1.4 + i * 0.2, 1.8 + i * 0.2] }}
+            transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.3, ease: "easeOut" }}
+          />
+        ))}
+      </>
+    );
+  }
+
   if (state === "processing") {
     return (
       <motion.div
@@ -70,7 +87,9 @@ function Avatar({ state }: { state: AssistantState }) {
         className="relative z-10 flex items-center justify-center rounded-full select-none"
         style={{ width: 140, height: 140, background: "var(--primary)" }}
       >
-        {state === "processing" ? (
+        {state === "searching" ? (
+          <Search size={52} color="#ffffff" />
+        ) : state === "processing" ? (
           <Loader2 size={52} color="#ffffff" className="animate-spin" />
         ) : state === "recording" ? (
           <Mic size={52} color="#ffffff" />
@@ -85,6 +104,7 @@ function Avatar({ state }: { state: AssistantState }) {
 function StatusLabel({ state, isActive }: { state: AssistantState; isActive: boolean }) {
   const labels: Partial<Record<AssistantState, string>> = {
     recording: "Escuchándote...",
+    searching: "Buscando en la web...",
     processing: "Procesando...",
     speaking: `${assistant.identity.name} está hablando...`,
     error: "Error",
@@ -307,12 +327,14 @@ export function MaxVoiceAssistant({
                   className="relative z-10 flex items-center justify-center rounded-full"
                   style={{ width: 56, height: 56, background: "var(--primary)" }}
                 >
-                  {state === "processing" ? (
+                  {state === "searching" ? (
+                    <Search size={22} color="#ffffff" />
+                  ) : state === "processing" ? (
                     <Loader2 size={22} color="#ffffff" className="animate-spin" />
                   ) : state === "recording" ? (
                     <Mic size={22} color="#ffffff" />
                   ) : (
-                    <span className="font-bold" style={{ fontSize: 26, lineHeight: 1, color: "#ffffff" }}>O</span>
+                    <span className="font-bold" style={{ fontSize: 26, lineHeight: 1, color: "#ffffff" }}>{assistant.identity.name.charAt(0)}</span>
                   )}
                 </motion.div>
               </div>
