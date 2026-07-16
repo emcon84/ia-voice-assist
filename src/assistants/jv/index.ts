@@ -3,6 +3,7 @@
 
 import type { AssistantConfig } from "../_contract";
 import { JV_BASE } from "@/data/knowledge/jv-base";
+import { JV_PROPERTIES_TEXT } from "@/data/knowledge/jv-properties";
 import { INMOBILIARIA_MODULE } from "./knowledge/inmobiliaria";
 
 export const jvConfig: AssistantConfig = {
@@ -20,6 +21,20 @@ export const jvConfig: AssistantConfig = {
 
   knowledge: {
     modules: [
+      {
+        id: "propiedades",
+        keywords: [
+          "propiedad", "propiedades", "departamento", "casa", "duplex",
+          "alquiler", "alquilar", "venta", "comprar",
+          "precio", "precios", "disponible", "disponibilidad",
+          "ubicación", "zona", "bulevar", "bulevares",
+          "reconquista", "villa ocampo",
+          "dormitorio", "ambiente", "cochera", "local",
+          "terreno", "lote", "mostrar", "mostrame", "buscar",
+          "listado", "catálogo", "catalogo", "link", "enlace",
+        ],
+        content: JV_PROPERTIES_TEXT,
+      },
       {
         id: "inmobiliaria",
         keywords: [
