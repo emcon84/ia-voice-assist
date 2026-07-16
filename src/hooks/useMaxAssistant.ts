@@ -141,6 +141,7 @@ export function useMaxAssistant(options: UseMaxAssistantOptions = {}): UseMaxAss
   }, []);
 
   const sendToMax = useCallback(async (userText: string): Promise<void> => {
+    const searchStart = Date.now();
     setState("searching");
     setCurrentUserText(userText);
 
@@ -168,6 +169,12 @@ export function useMaxAssistant(options: UseMaxAssistantOptions = {}): UseMaxAss
           return;
         }
         throw new Error(body.error ?? "Chat falló");
+      }
+
+      // Asegurar que "searching" se vea al menos 1.5s
+      const elapsed = Date.now() - searchStart;
+      if (elapsed < 1500) {
+        await new Promise((r) => setTimeout(r, 1500 - elapsed));
       }
 
       setState("processing");
