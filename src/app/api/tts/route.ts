@@ -58,6 +58,15 @@ function normalizeForTTS(
     // también se deletrea. Los códigos CIRSOC van con guión, no espacio → no matchea.
     .replace(/\b\d{3,5}\s\d{4,}\b/g, (m) =>
       m.split(/\s+/).map((g) => g.split("").join(" ")).join(", "))
+    // Prices: remove thousand separator dots so TTS reads numbers correctly
+    // "$450.000" → after dot removal → "$450000" → ElevenLabs reads as "cuatrocientos cincuenta mil"
+    .replace(/\$(\d+)\.(\d{3})\.(\d{3})\b/g, "$$$1$2$3")
+    .replace(/\$(\d+)\.(\d{3})\b/g, "$$$1$2")
+    // "/por mes" or "/por dia" → " por mes" / " por día" (remove slash)
+    .replace(/\s*\/por\s+/g, " por ")
+    // "$" in Argentina = pesos, not dollars. Replace remaining "$" with "pesos"
+    // But only when followed by digits (prices), not in other contexts
+    .replace(/\$\s*(\d+)/g, "$1 pesos")
     // Cualquier otra tira larga suelta (5+ dígitos) también dígito por dígito.
     // Deja intactos números chicos: internos (130), cantidades, años (2024).
     .replace(/\d{5,}/g, (m) => m.split("").join(" "));
