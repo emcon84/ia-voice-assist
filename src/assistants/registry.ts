@@ -87,6 +87,11 @@ export function buildOnboardingPrompt(config: AssistantConfig, subject: string):
   ].join("\n\n---\n\n");
 }
 
+/** Devuelve la config de un asistente por ID. */
+export function getAssistantById(id: string): AssistantConfig | undefined {
+  return ASSISTANTS[id];
+}
+
 /** IDs de los módulos que matchean un texto (para logging en dev). */
 export function getLoadedModuleIds(config: AssistantConfig, text: string): string[] {
   const norm = normalize(text);

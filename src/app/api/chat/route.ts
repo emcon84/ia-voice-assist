@@ -1,110 +1,33 @@
-import { NextRequest, NextResponse } from "next/server";
-import {
-  getActiveAssistant,
-  buildDynamicPrompt,
-  buildOnboardingPrompt,
-  getLoadedModuleIds,
-} from "@/assistants/registry";
-
-import prisma from "@/infrastructure/database/prisma";
+import { processMessage, NoCreditsError } from "@/services/chatService";
+import { getActiveAssistant } from "@/assistants/registry";
 
 export const runtime = "nodejs";
 
-interface Message {
-  role: "user" | "assistant";
-  content: string;
-}
-
-interface MaxChatRequest {
-  messages: Message[];
-  projectId?: string;
-  conversationId?: string;
-  mode?: "chat" | "onboarding";
-}
-
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const { messages, projectId, conversationId, mode } = await req.json() as MaxChatRequest;
+    const body = await req.json();
+    const { messages, projectId, conversationId, mode, projectContext } = body;
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "ANTHROPIC_API_KEY not set" }, { status: 500 });
-    }
-
+    const userText = messages?.find((m: any) => m.role === "user")?.content || "";
     const assistant = getActiveAssistant();
-    const userText = messages.map((m) => m.content).join(" ");
 
-    let systemPrompt: string;
-    let maxTokens = 350;
-
-    if (projectId) {
-      // prisma es lazy: no exige DATABASE_URL salvo que realmente se use (con projectId).
-      const project = await prisma.project.findUnique({ where: { id: projectId } });
-      if (mode === "onboarding") {
-        systemPrompt = buildOnboardingPrompt(assistant, project?.name ?? "tu caso");
-        maxTokens = 500;
-      } else {
-        systemPrompt = buildDynamicPrompt(assistant, userText, project?.context ?? undefined);
-      }
-    } else {
-      systemPrompt = buildDynamicPrompt(assistant, userText);
-    }
-
-    // --- INYECCIÓN DE DATOS DINÁMICOS (genérico) ---
-    // Si el asistente tiene un dataProvider, lo consulta para injectar data
-    // actualizada en el prompt. Cada asistente implementa su propio provider
-    // (GraphQL, REST, scraper, etc.) sin que el core sepa cuál es.
-    if (assistant.dataProvider && mode !== "onboarding") {
-      try {
-        const dynamicData = await assistant.dataProvider.fetchData(userText);
-        if (dynamicData) {
-          systemPrompt += dynamicData;
-          maxTokens = Math.max(maxTokens, 500);
-        }
-      } catch (err) {
-        console.error(`[${assistant.id}] dataProvider error:`, err);
-      }
-    }
-    // --- FIN INYECCIÓN ---
-
-    // Log en dev para ver qué módulos se cargaron
-    if (process.env.NODE_ENV === "development") {
-      const loaded = getLoadedModuleIds(assistant, userText);
-      console.log(`[${assistant.identity.name}] Módulos cargados: ${loaded.join(", ") || "solo base"} | Tokens estimados: ~${Math.round(systemPrompt.length / 4)}`);
-    }
-
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-beta": "prompt-caching-2024-07-31",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: assistant.models.chat,
-        max_tokens: maxTokens,
-        system: [{ type: "text", text: systemPrompt, cache_control: { type: "ephemeral" } }],
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
-      }),
+    const result = await processMessage(assistant, userText, {
+      messages,
+      projectId,
+      conversationId,
+      mode,
+      projectContext,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Claude error:", response.status, errorText);
-      if (response.status === 402 || response.status === 529 ||
-          errorText.includes("credit_balance_too_low") || errorText.includes("credit")) {
-        return NextResponse.json({ error: "NO_CREDITS", service: "anthropic" }, { status: 402 });
-      }
-      return NextResponse.json({ error: errorText }, { status: 500 });
+    return Response.json({ reply: result.reply, conversationId: result.conversationId });
+  } catch (err: any) {
+    if (err instanceof NoCreditsError) {
+      return Response.json(
+        { error: "NO_CREDITS", service: err.service },
+        { status: 402 }
+      );
     }
-
-    const data = await response.json();
-    const reply = data.content[0]?.text ?? "";
-
-    return NextResponse.json({ reply, conversationId });
-  } catch (error) {
-    console.error("OMAR chat error:", error);
-    return NextResponse.json({ error: "Chat failed" }, { status: 500 });
+    console.error("[chat] Error:", err);
+    return Response.json({ error: err.message || "Chat failed" }, { status: 500 });
   }
 }
