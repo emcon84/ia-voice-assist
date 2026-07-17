@@ -4,7 +4,7 @@ const GRAPHQL_ENDPOINT = "https://api.inmanager.com.ar/graphql";
 const SARTOR_WEB = "https://sartorinmobiliaria.com";
 
 const PROPERTY_SEARCH_QUERY = `
-query propertySearch($agencyIds: [Int], $per: Int, $attributes: PropertySearchInput) {
+query propertySearch($agencyIds: [ID!], $per: Int, $attributes: PropertySearchInput) {
   propertySearch(agencyIds: $agencyIds, per: $per, attributes: $attributes) {
     properties {
       id
