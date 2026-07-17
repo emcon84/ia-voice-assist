@@ -13,10 +13,19 @@ export interface LeadData {
 }
 
 function getPrivateKey(): string {
-  const key = process.env.GOOGLE_SHEETS_PRIVATE_KEY || "";
+  let key = process.env.GOOGLE_SHEETS_PRIVATE_KEY || "";
+
+  // Strip surrounding quotes if present (from JSON copy-paste)
+  key = key.replace(/^["']|["']$/g, "");
+
+  // Convert literal \n to real newlines
   if (key.includes("\\n")) {
-    return key.replace(/\\n/g, "\n");
+    key = key.replace(/\\n/g, "\n");
   }
+
+  // Trim any leading/trailing whitespace
+  key = key.trim();
+
   return key;
 }
 

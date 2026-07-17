@@ -25,6 +25,10 @@ export async function GET() {
         length: key.length,
         hasRealNewlines: key.includes("\n"),
         hasLiteralN: key.includes("\\n"),
+        first100: JSON.stringify(key.substring(0, 100)),
+        last100: JSON.stringify(key.substring(key.length - 100)),
+        charCodesAt0: key.charCodeAt(0),
+        charCodesAt1: key.charCodeAt(1),
       };
     } catch (err: any) {
       result.jwtError = err.message;
