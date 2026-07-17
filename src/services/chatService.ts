@@ -1,5 +1,6 @@
 import type { AssistantConfig } from "@/assistants/_contract";
 import { buildDynamicPrompt, buildOnboardingPrompt, getLoadedModuleIds } from "@/assistants/registry";
+import { googleSheetsService } from "@/services/googleSheetsService";
 import Anthropic from "@anthropic-ai/sdk";
 
 export interface ChatMessage {
@@ -103,6 +104,32 @@ export async function processMessage(
     let reply = "";
     for (const block of response.content) {
       if (block.type === "text") reply += block.text;
+    }
+
+    // Lead capture: detect <|lead|> marker in AI response
+    const leadMatch = reply.match(/<\|lead\|>([\s\S]*?)<\/lead>/);
+    if (leadMatch) {
+      try {
+        const leadData = JSON.parse(leadMatch[1]);
+        const result = await googleSheetsService.appendLead({
+          name: leadData.name || "",
+          phone: leadData.phone || "",
+          email: leadData.email || "",
+          type: leadData.type || "",
+          propertyType: leadData.propertyType || "",
+          budget: leadData.budget || "",
+          zone: leadData.zone || "",
+          notes: leadData.notes || "",
+          source: leadData.source || "whatsapp",
+        });
+        if (!result.ok) {
+          console.warn("[chatService] Lead save failed:", (result as any).error);
+        }
+      } catch (err) {
+        console.warn("[chatService] Lead parse error:", err);
+      }
+      // Strip the lead marker from the response sent to user
+      reply = reply.replace(/<\|lead\|>[\s\S]*?<\/lead>/, "").trim();
     }
 
     return { reply, conversationId };
