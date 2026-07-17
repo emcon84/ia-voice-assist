@@ -231,6 +231,10 @@ export function getSession(convId: string): QuestionnaireSession | undefined {
   return sessions.get(convId);
 }
 
+export function clearSession(convId: string): void {
+  sessions.delete(convId);
+}
+
 export function getCurrentStep(convId: string): QuestionStep | null {
   const session = sessions.get(convId);
   if (!session) return null;

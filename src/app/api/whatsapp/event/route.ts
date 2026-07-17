@@ -117,7 +117,21 @@ export async function POST(req: Request) {
     return new Response("OK", { status: 200 });
   }
 
-  // ── 6. ACTIVE QUESTIONNAIRE → process answer, send next or complete ────────
+  // ── 6. "MENU" KEYWORD → restart with welcome list ──────────────────────────
+  if (assistant.whatsapp?.welcomeMessage && /^(menu|menú|inicio|empezar|reiniciar|volver)/i.test(text.trim())) {
+    // Clear any session and history, restart fresh
+    questionnaire.clearSession(convId);
+    conversationHistory.delete(convId);
+    const wm = assistant.whatsapp.welcomeMessage;
+    try {
+      await sendListMessage(phoneNumberId, from, wm.body, wm.buttonText, wm.sections, wm.footer);
+    } catch (err) {
+      console.error("[whatsapp] Error sending welcome list:", err);
+    }
+    return new Response("OK", { status: 200 });
+  }
+
+  // ── 7. ACTIVE QUESTIONNAIRE → process answer, send next or complete ────────
   const activeSession = questionnaire.getSession(convId);
   if (activeSession) {
     const result = questionnaire.processAnswer(convId, text);
