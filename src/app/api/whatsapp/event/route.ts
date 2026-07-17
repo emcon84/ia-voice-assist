@@ -111,6 +111,8 @@ export async function POST(req: Request) {
     const wm = assistant.whatsapp.welcomeMessage;
     try {
       await sendListMessage(phoneNumberId, from, wm.body, wm.buttonText, wm.sections, wm.footer);
+      // Mark in history so we don't re-send welcome on their next message
+      if (convId) conversationHistory.set(convId, []);
     } catch (err) {
       console.error("[whatsapp] Error sending welcome list:", err);
     }
@@ -119,12 +121,12 @@ export async function POST(req: Request) {
 
   // ── 6. "MENU" KEYWORD → restart with welcome list ──────────────────────────
   if (assistant.whatsapp?.welcomeMessage && /^(menu|menú|inicio|empezar|reiniciar|volver)/i.test(text.trim())) {
-    // Clear any session and history, restart fresh
     questionnaire.clearSession(convId);
-    conversationHistory.delete(convId);
     const wm = assistant.whatsapp.welcomeMessage;
     try {
       await sendListMessage(phoneNumberId, from, wm.body, wm.buttonText, wm.sections, wm.footer);
+      // Mark in history so we don't re-send welcome on their next message
+      if (convId) conversationHistory.set(convId, []);
     } catch (err) {
       console.error("[whatsapp] Error sending welcome list:", err);
     }
