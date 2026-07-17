@@ -168,29 +168,35 @@ class SartorGraphqlService implements DataProvider {
   }
 
   private buildFetchDataOutput(properties: SartorProperty[], userText: string): string {
-    if (properties.length === 0) return "";
-
     const lower = userText.toLowerCase();
-    const tipo = /\b(alquiler|alquilar|alquilo|alquilamos|alquilando)\b/.test(lower) ? "alquiler" : /\b(venta|comprar|compro|vender|vendo)\b/.test(lower) ? "venta" : "disponibles";
 
-    let output = `\n\nDATOS DEL SISTEMA (${tipo.toUpperCase()}):\n`;
-    output += `Se encontraron ${properties.length} propiedades en ${tipo}.\n\n`;
+    // Determinar si busca alquiler o venta
+    const buscaAlquiler = /\b(alquiler|alquilar|alquilo|alquilamos|alquilando)\b/.test(lower);
+    const buscaVenta = /\b(venta|comprar|compra|vender|vendo)\b/.test(lower);
 
-    properties.slice(0, 10).forEach((p, i) => {
+    let output = `PROPIEDADES `;
+    output += buscaAlquiler ? `EN ALQUILER` : buscaVenta ? `EN VENTA` : `DISPONIBLES`;
+    output += ` (total: ${properties.length}):`;
+
+    // Mostrar hasta 8 propiedades
+    properties.slice(0, 8).forEach((p, i) => {
       const chars = p.characteristics;
       const dormitorios = this.getChar(chars, "Dormitorios");
       const ambientes = this.getChar(chars, "Ambientes");
       const supCubierta = this.getChar(chars, "Superficie cubierta");
       const cocheraRaw = this.getChar(chars, "Cochera");
 
-      output += `${i + 1}. ${p.fullAddress}`;
-      if (p.price) output += ` — ${p.price}`;
-      if (dormitorios) output += ` — ${dormitorios}d`;
-      if (ambientes) output += ` — ${ambientes}amb`;
-      if (supCubierta && supCubierta !== "0") output += ` — ${supCubierta}m²`;
-      output += cocheraRaw === "1" ? " — cochera" : "";
-      output += `\n   Link: ${SARTOR_WEB}/propiedad?id=${p.id}\n`;
+      output += `\n${i + 1}) ${p.fullAddress}. Precio: ${p.price || "consultar"}.`;
+      if (dormitorios) output += ` ${dormitorios} dormitorios.`;
+      if (ambientes) output += ` ${ambientes} ambientes.`;
+      if (supCubierta && supCubierta !== "0") output += ` ${supCubierta} m² cubiertos.`;
+      output += cocheraRaw === "1" ? " Tiene cochera." : " Sin cochera.";
+      output += ` Link: ${SARTOR_WEB}/propiedad?id=${p.id}`;
     });
+
+    if (properties.length > 8) {
+      output += `\n... y ${properties.length - 8} propiedades más.`;
+    }
 
     return output;
   }
@@ -199,8 +205,9 @@ class SartorGraphqlService implements DataProvider {
     const attributes = this.extractUserIntent(userText);
     let properties = await this.searchProperties(attributes);
 
-    // Si no hay resultados con filtros, intentar sin filtros
-    if (properties.length === 0 && Object.keys(attributes).length > 0) {
+    // Si no hay resultados con filtros o el usuario no pidió nada específico,
+    // devolver propiedades generales (siempre hay algo para mostrar)
+    if (properties.length === 0) {
       properties = await this.searchProperties({});
     }
 

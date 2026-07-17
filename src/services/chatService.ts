@@ -51,22 +51,12 @@ export async function processMessage(
     systemPrompt = buildDynamicPrompt(assistant, userText);
   }
 
-  // DataProvider injection — pass ALL user messages for full context
+  // DataProvider injection
   if (assistant.dataProvider && mode !== "onboarding") {
     try {
-      // Concatenate all user messages so fetchData understands the full intent
-      // even if the last message is just "gracias"
-      const fullUserContext = [
-        ...messages.filter((m) => m.role === "user").map((m) => m.content),
-        userText,
-      ]
-        .filter(Boolean)
-        .slice(-5) // last 5 messages max for context
-        .join(" | ");
-
-      const data = await assistant.dataProvider.fetchData(fullUserContext);
+      const data = await assistant.dataProvider.fetchData(userText);
       if (data.trim()) {
-        systemPrompt += `\n\n<system_data>\n<instruction>Los datos de propiedades a continuación están DISPONIBLES AHORA MISMO en el sistema. Si el usuario preguntó por propiedades, precios, alquiler, venta o disponibilidad, DEBÉS usar estos datos para responder con información concreta. NO digas que no tenés información, NO digas que necesitás consultar el sistema. Usá estos datos AHORA.</instruction>\n<properties>\n${data}\n</properties>\n</system_data>`;
+        systemPrompt += `\n\n[DATOS_INTERNOS_PARA_SOFIA]\n${data}\n[/DATOS_INTERNOS_PARA_SOFIA]\nEstos datos son solo para que Sofia los use al responder. NO debe repetirlos textualmente ni mostrar JSON.`;
         extraTokens = 150;
       }
     } catch (err) {
