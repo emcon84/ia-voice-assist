@@ -66,7 +66,7 @@ export async function processMessage(
 
       const data = await assistant.dataProvider.fetchData(fullUserContext);
       if (data.trim()) {
-        systemPrompt += `\n\n--- INSTRUCCIÓN IMPORTANTE ---\nLos datos de propiedades a continuación están DISPONIBLES AHORA MISMO en el sistema.\nSi el usuario preguntó por propiedades, precios, alquiler, venta o disponibilidad, DEBÉS usar estos datos para responder con información concreta. NO digas que no tenés información, NO digas que necesitás consultar el sistema. Usá estos datos AHORA.\n---\n${data}\n--- FIN DATOS ---`;
+        systemPrompt += `\n\n<system_data>\n<instruction>Los datos de propiedades a continuación están DISPONIBLES AHORA MISMO en el sistema. Si el usuario preguntó por propiedades, precios, alquiler, venta o disponibilidad, DEBÉS usar estos datos para responder con información concreta. NO digas que no tenés información, NO digas que necesitás consultar el sistema. Usá estos datos AHORA.</instruction>\n<properties>\n${data}\n</properties>\n</system_data>`;
         extraTokens = 150;
       }
     } catch (err) {

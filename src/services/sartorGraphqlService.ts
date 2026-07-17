@@ -120,21 +120,26 @@ class SartorGraphqlService implements DataProvider {
     }
 
     // --- Price range ---
+    // Handles: "hasta 600mil", "maximo 600", "maximo de 600mil", "presupuesto maximo de 600", etc.
     const priceMatch = lower.match(
-      /(?:hasta|maximo|máximo|menos de|hasta|presupuesto(?:\s+maximo|\s+máximo)?(?:\s+de)?)\s*\$?\s*([\d.]+)\s*(?:mil|k|\.000)?\s*(?:pesos)?(?:\s*por\s*mes)?/i
+      /(?:hasta|maximo\s*de|máximo\s*de|maximo|máximo|menos de|presupuesto(?:\s+maximo|\s+máximo)?(?:\s+de)?)\s*\$?\s*([\d.]+)\s*(mil|millón|millones)?/i
     );
     if (priceMatch) {
       let val = parseFloat(priceMatch[1].replace(/\./g, ""));
-      if (priceMatch[0].includes("mil") && val < 1000) val *= 1000;
+      const suffix = (priceMatch[2] || "").toLowerCase();
+      if (suffix === "mil") val *= 1000;
+      else if (suffix === "millón" || suffix === "millones") val *= 1000000;
       attrs.maxPrice = String(val);
     }
 
     const minMatch = lower.match(
-      /(?:desde|minimo|mínimo|mas de|más de)\s*\$?\s*([\d.]+)\s*(?:mil|k)?/i
+      /(?:desde|minimo|mínimo|mas de|más de)\s*\$?\s*([\d.]+)\s*(mil|millón|millones)?/i
     );
     if (minMatch) {
       let val = parseFloat(minMatch[1].replace(/\./g, ""));
-      if (minMatch[0].includes("mil") && val < 1000) val *= 1000;
+      const suffix = (minMatch[2] || "").toLowerCase();
+      if (suffix === "mil") val *= 1000;
+      else if (suffix === "millón" || suffix === "millones") val *= 1000000;
       attrs.minPrice = String(val);
     }
 
@@ -166,7 +171,7 @@ class SartorGraphqlService implements DataProvider {
     if (properties.length === 0) return "";
 
     const lower = userText.toLowerCase();
-    const tipo = lower.includes("alquiler") ? "alquiler" : lower.includes("venta") ? "venta" : "disponibles";
+    const tipo = /\b(alquiler|alquilar|alquilo|alquilamos|alquilando)\b/.test(lower) ? "alquiler" : /\b(venta|comprar|compro|vender|vendo)\b/.test(lower) ? "venta" : "disponibles";
 
     let output = `\n\nDATOS DEL SISTEMA (${tipo.toUpperCase()}):\n`;
     output += `Se encontraron ${properties.length} propiedades en ${tipo}.\n\n`;
