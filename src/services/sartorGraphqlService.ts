@@ -191,7 +191,7 @@ class SartorGraphqlService implements DataProvider {
       if (ambientes) output += ` ${ambientes} ambientes.`;
       if (supCubierta && supCubierta !== "0") output += ` ${supCubierta} m² cubiertos.`;
       output += cocheraRaw === "1" ? " Tiene cochera." : " Sin cochera.";
-      output += ` Link: ${SARTOR_WEB}/propiedad?id=${p.id}`;
+      output += ` Link: ${SARTOR_WEB}/propiedad/${p.id}`;
     });
 
     if (properties.length > 8) {
