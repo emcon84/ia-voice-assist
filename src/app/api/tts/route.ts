@@ -59,9 +59,11 @@ function normalizeForTTS(
     .replace(/\b\d{3,5}\s\d{4,}\b/g, (m) =>
       m.split(/\s+/).map((g) => g.split("").join(" ")).join(", "))
     // Prices: remove thousand separator dots so TTS reads numbers correctly
-    // "$450.000" → after dot removal → "$450000" → ElevenLabs reads as "cuatrocientos cincuenta mil"
-    .replace(/\$(\d+)\.(\d{3})\.(\d{3})\b/g, "$$$1$2$3")
-    .replace(/\$(\d+)\.(\d{3})\b/g, "$$$1$2")
+    // Handle "$ 480.000" and "$480.000" (with or without space after $)
+    .replace(/\$\s*(\d+)\.(\d{3})\.(\d{3})\b/g, "$$$1$2$3")
+    .replace(/\$\s*(\d+)\.(\d{3})\b/g, "$$$1$2")
+    // Handle USD prices: "USD 100.000" → "USD 100000"
+    .replace(/\bUSD\s*(\d+)\.(\d{3})\b/g, "USD $1$2")
     // "/por mes" or "/por dia" → " por mes" / " por día" (remove slash)
     .replace(/\s*\/por\s+/g, " por ")
     // "$" in Argentina = pesos, not dollars. Replace remaining "$" with "pesos"
