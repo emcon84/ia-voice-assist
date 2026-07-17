@@ -7,6 +7,7 @@
 import type { AssistantConfig } from "./_contract";
 import { demoConfig } from "./demo";
 import { jvConfig } from "./jv";
+import { sartorConfig } from "./sartor";
 
 /**
  * Todas las configs registradas. Migrar Omar/Max a este mapa reemplazando sus
@@ -15,6 +16,7 @@ import { jvConfig } from "./jv";
 const ASSISTANTS: Record<string, AssistantConfig> = {
   demo: demoConfig,
   jv: jvConfig,
+  sartor: sartorConfig,
 };
 
 const DEFAULT_ASSISTANT_ID = "demo";
