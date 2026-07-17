@@ -50,7 +50,22 @@ export async function POST(req: NextRequest) {
       systemPrompt = buildDynamicPrompt(assistant, userText);
     }
 
-
+    // --- INYECCIÓN DE DATOS DINÁMICOS (genérico) ---
+    // Si el asistente tiene un dataProvider, lo consulta para injectar data
+    // actualizada en el prompt. Cada asistente implementa su propio provider
+    // (GraphQL, REST, scraper, etc.) sin que el core sepa cuál es.
+    if (assistant.dataProvider && mode !== "onboarding") {
+      try {
+        const dynamicData = await assistant.dataProvider.fetchData(userText);
+        if (dynamicData) {
+          systemPrompt += dynamicData;
+          maxTokens = Math.max(maxTokens, 500);
+        }
+      } catch (err) {
+        console.error(`[${assistant.id}] dataProvider error:`, err);
+      }
+    }
+    // --- FIN INYECCIÓN ---
 
     // Log en dev para ver qué módulos se cargaron
     if (process.env.NODE_ENV === "development") {

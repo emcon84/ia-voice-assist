@@ -79,6 +79,16 @@ export interface LeadsConfig {
   toEmail: string;
 }
 
+/**
+ * Provider opcional de datos dinámicos.
+ * Cada asistente puede implementarlo a su manera (API GraphQL, REST, scraper, etc.)
+ * sin que el core sepa nada de la fuente. Esto mantiene el sistema genérico.
+ */
+export interface DataProvider {
+  /** Recibe el texto del usuario y devuelve texto formateado para injectar en el prompt. */
+  fetchData(userText: string): Promise<string>;
+}
+
 /** Modelos de IA usados por este asistente. */
 export interface ModelsConfig {
   /** Modelo de chat de texto (Anthropic). Ej. "claude-sonnet-4-6". */
@@ -116,6 +126,9 @@ export interface AssistantConfig {
     /** Entrevista de onboarding opcional. */
     onboarding?: OnboardingConfig;
   };
+
+  /** Provider de datos dinámicos (opcional). Si existe, se consulta en cada request. */
+  dataProvider?: DataProvider;
 
   /** Wizard visual opcional (no todo negocio lo tiene). */
   wizard?: {
