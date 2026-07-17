@@ -162,49 +162,32 @@ class SartorGraphqlService implements DataProvider {
     return value;
   }
 
-  private formatProperties(properties: SartorProperty[], userText: string): string {
+  private buildFetchDataOutput(properties: SartorProperty[], userText: string): string {
     if (properties.length === 0) return "";
 
     const lower = userText.toLowerCase();
-    const typeLabel = lower.includes("alquiler")
-      ? "ALQUILER"
-      : lower.includes("venta")
-        ? "VENTA"
-        : "DISPONIBLES";
+    const tipo = lower.includes("alquiler") ? "alquiler" : lower.includes("venta") ? "venta" : "disponibles";
 
-    let text = `\n\n---\n\nPROPIEDADES DE SARTOR INMOBILIARIA (${typeLabel}):\n\n`;
+    let output = `\n\nDATOS DEL SISTEMA (${tipo.toUpperCase()}):\n`;
+    output += `Se encontraron ${properties.length} propiedades en ${tipo}.\n\n`;
 
-    properties.slice(0, 15).forEach((p, i) => {
+    properties.slice(0, 10).forEach((p, i) => {
       const chars = p.characteristics;
       const dormitorios = this.getChar(chars, "Dormitorios");
       const ambientes = this.getChar(chars, "Ambientes");
-      const cochera = this.getChar(chars, "Cochera");
       const supCubierta = this.getChar(chars, "Superficie cubierta");
+      const cocheraRaw = this.getChar(chars, "Cochera");
 
-      text += `--- Propiedad ${i + 1} ---\n`;
-      text += `Dirección: ${p.fullAddress}\n`;
-      if (p.price) text += `Precio: ${p.price}\n`;
-      if (dormitorios) text += `Dormitorios: ${dormitorios}\n`;
-      if (ambientes) text += `Ambientes: ${ambientes}\n`;
-      if (supCubierta && supCubierta !== "0") text += `Superficie cubierta: ${supCubierta} m²\n`;
-      text += `Cochera: ${cochera === "1" ? "Si" : "No"}\n`;
-      if (p.description) {
-        const shortDesc = p.description.substring(0, 150).trim();
-        text += `Descripción: ${shortDesc}${p.description.length > 150 ? "..." : ""}\n`;
-      }
-      text += `Link: ${SARTOR_WEB}/propiedad?id=${p.id}\n`;
-      if (p.images?.length > 0) {
-        text += `Fotos: ${p.images.slice(0, 3).map((img) => this.imgUrl(img.smallUrl || img.url)).join(" | ")}\n`;
-      }
-      text += "\n";
+      output += `${i + 1}. ${p.fullAddress}`;
+      if (p.price) output += ` — ${p.price}`;
+      if (dormitorios) output += ` — ${dormitorios}d`;
+      if (ambientes) output += ` — ${ambientes}amb`;
+      if (supCubierta && supCubierta !== "0") output += ` — ${supCubierta}m²`;
+      output += cocheraRaw === "1" ? " — cochera" : "";
+      output += `\n   Link: ${SARTOR_WEB}/propiedad?id=${p.id}\n`;
     });
 
-    if (properties.length > 15) {
-      text += `... y ${properties.length - 15} propiedades más.\n`;
-    }
-    text += `\nTotal: ${properties.length} propiedades en ${typeLabel}.`;
-
-    return text;
+    return output;
   }
 
   async fetchData(userText: string): Promise<string> {
@@ -216,7 +199,7 @@ class SartorGraphqlService implements DataProvider {
       properties = await this.searchProperties({});
     }
 
-    return this.formatProperties(properties, userText);
+    return this.buildFetchDataOutput(properties, userText);
   }
 }
 

@@ -51,12 +51,24 @@ export async function processMessage(
     systemPrompt = buildDynamicPrompt(assistant, userText);
   }
 
-  // DataProvider injection
+  // DataProvider injection — pass ALL user messages for full context
   if (assistant.dataProvider && mode !== "onboarding") {
     try {
-      const data = await assistant.dataProvider.fetchData(userText);
-      systemPrompt += `\n\n---\n\nDATOS ACTUALIZADOS:\n${data}`;
-      extraTokens = 150;
+      // Concatenate all user messages so fetchData understands the full intent
+      // even if the last message is just "gracias"
+      const fullUserContext = [
+        ...messages.filter((m) => m.role === "user").map((m) => m.content),
+        userText,
+      ]
+        .filter(Boolean)
+        .slice(-5) // last 5 messages max for context
+        .join(" | ");
+
+      const data = await assistant.dataProvider.fetchData(fullUserContext);
+      if (data.trim()) {
+        systemPrompt += `\n\n--- INSTRUCCIÓN IMPORTANTE ---\nLos datos de propiedades a continuación están DISPONIBLES AHORA MISMO en el sistema.\nSi el usuario preguntó por propiedades, precios, alquiler, venta o disponibilidad, DEBÉS usar estos datos para responder con información concreta. NO digas que no tenés información, NO digas que necesitás consultar el sistema. Usá estos datos AHORA.\n---\n${data}\n--- FIN DATOS ---`;
+        extraTokens = 150;
+      }
     } catch (err) {
       console.error(`[chatService] dataProvider error for ${assistant.id}:`, err);
     }
