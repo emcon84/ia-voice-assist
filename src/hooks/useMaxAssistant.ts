@@ -149,7 +149,7 @@ export function useMaxAssistant(options: UseMaxAssistantOptions = {}): UseMaxAss
     updateMessages(updated);
 
     try {
-      const res = await fetch("/api/max-chat", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
