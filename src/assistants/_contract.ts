@@ -89,6 +89,30 @@ export interface DataProvider {
   fetchData(userText: string): Promise<string>;
 }
 
+/**
+ * Configuración de mensajes interactivos de WhatsApp.
+ * Cada asistente puede definir su propio menú de bienvenida con lista de opciones.
+ */
+export interface WhatsAppConfig {
+  welcomeMessage: {
+    /** Texto del body del mensaje interactivo (máx 1024 chars). */
+    body: string;
+    /** Texto opcional del footer (máx 60 chars). */
+    footer?: string;
+    /** Texto del botón que abre la lista (máx 20 chars). Ej. "Ver opciones". */
+    buttonText: string;
+    /** Secciones con filas de opciones. Hasta 10 filas en total. */
+    sections: Array<{
+      title?: string;
+      rows: Array<{
+        id: string;
+        title: string;
+        description?: string;
+      }>;
+    }>;
+  };
+}
+
 /** Modelos de IA usados por este asistente. */
 export interface ModelsConfig {
   /** Modelo de chat de texto (Anthropic). Ej. "claude-sonnet-4-6". */
@@ -143,6 +167,9 @@ export interface AssistantConfig {
 
   /** Captación de leads opcional. */
   leads?: LeadsConfig;
+
+  /** Configuración de WhatsApp (mensajes interactivos, menú de bienvenida). */
+  whatsapp?: WhatsAppConfig;
 
   models: ModelsConfig;
 }

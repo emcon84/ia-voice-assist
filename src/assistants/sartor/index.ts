@@ -52,6 +52,25 @@ export const sartorConfig: AssistantConfig = {
     baseUrl: "http://localhost:3000",
   },
 
+  whatsapp: {
+    welcomeMessage: {
+      body: "¡Hola! Soy Sofia, la asistente de Sartor Inmobiliaria.\n\n¿Qué necesitás? Elegí una opción:",
+      footer: "Respondé o tocá una opción cuando quieras",
+      buttonText: "Ver opciones",
+      sections: [
+        {
+          title: "¿Qué querés hacer?",
+          rows: [
+            { id: "comprar", title: "Comprar", description: "Buscar propiedades en venta" },
+            { id: "alquilar", title: "Alquilar", description: "Buscar propiedades en alquiler" },
+            { id: "vender", title: "Vender", description: "Publicar tu propiedad" },
+            { id: "tasar", title: "TasAr", description: "Tasación de tu propiedad" },
+          ],
+        },
+      ],
+    },
+  },
+
   models: {
     chat: "claude-sonnet-4-6",
     stt: "whisper-large-v3-turbo",

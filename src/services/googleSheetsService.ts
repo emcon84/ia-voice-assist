@@ -94,7 +94,7 @@ async function appendLead(lead: LeadData): Promise<{ ok: true } | { ok: false; e
     ];
 
     const res = await fetch(
-      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Leads!A:J:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/A:J:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       {
         method: "POST",
         headers: {
@@ -102,7 +102,7 @@ async function appendLead(lead: LeadData): Promise<{ ok: true } | { ok: false; e
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          range: "Leads!A:J",
+          range: "A:J",
           majorDimension: "ROWS",
           values: [row],
         }),
