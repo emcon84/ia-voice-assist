@@ -32,6 +32,16 @@ export const sartorConfig: AssistantConfig = {
         content: SARTOR_BASE,
       },
     ],
+    onboarding: {
+      questions: [
+        "¿Qué tipo de propiedad estás buscando? (casa, departamento, duplex, PH, terreno, local, cochera)",
+        "¿Cuántos ambientes o dormitorios necesitás?",
+        "¿En qué zona o barrio preferís? (Reconquista, Avellaneda, zona norte, etc.)",
+        "¿Cuál es tu presupuesto aproximado? (en pesos o USD)",
+      ],
+      closingInstruction:
+        "Cuando tengas todos los datos del usuario, buscá propiedades que coincidan con sus criterios usándolos como filtros. Si encontrás, mostralas con precio y link. Si no hay coincidencias exactas, ofrecé opciones similares o preguntá si quiere ajustar.",
+    },
   },
 
   voice: {

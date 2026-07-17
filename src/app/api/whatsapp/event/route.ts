@@ -121,7 +121,12 @@ export async function POST(req: Request) {
     return new Response("OK", { status: 200 });
   }
 
-  // 7. Recover conversation history
+  // 7. Detect if user tapped a button from the welcome list → onboarding mode
+  // This skips dataProvider and uses structured interview questions
+  const isButtonReply = message.type === "interactive";
+  const mode = isButtonReply ? "onboarding" : ("chat" as const);
+
+  // 8. Recover conversation history
   const history = convId ? conversationHistory.get(convId) || [] : [];
   const messages: ChatMessage[] = [
     ...history,
@@ -129,10 +134,11 @@ export async function POST(req: Request) {
   ];
 
   try {
-    // 8. Process message with full history
+    // 9. Process message with full history (onboarding mode for button taps)
     const result = await processMessage(assistant, text, {
       messages,
       conversationId: convId,
+      mode,
     });
 
     // 9. Store updated history

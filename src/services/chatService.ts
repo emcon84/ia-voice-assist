@@ -46,7 +46,9 @@ export async function processMessage(
   let systemPrompt: string;
   let extraTokens = 0;
 
-  if (projectId && projectContext) {
+  if (mode === "onboarding") {
+    systemPrompt = buildOnboardingPrompt(assistant, userText);
+  } else if (projectId && projectContext) {
     systemPrompt = buildDynamicPrompt(assistant, userText, projectContext);
   } else {
     systemPrompt = buildDynamicPrompt(assistant, userText);
