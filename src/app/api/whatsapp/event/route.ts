@@ -119,8 +119,9 @@ export async function POST(req: Request) {
     return new Response("OK", { status: 200 });
   }
 
-  // ── 6. "MENU" KEYWORD → restart with welcome list ──────────────────────────
-  if (assistant.whatsapp?.welcomeMessage && /^(menu|menú|inicio|empezar|reiniciar|volver)/i.test(text.trim())) {
+  // ── 6. GREETING / MENU KEYWORD → restart with welcome list ─────────────────
+  const restartsFlow = /^(menu|menú|inicio|empezar|reiniciar|volver|hola|buenas|buena|bueno|buenos|buenos días|buen dia)/i.test(text.trim());
+  if (assistant.whatsapp?.welcomeMessage && restartsFlow) {
     questionnaire.clearSession(convId);
     const wm = assistant.whatsapp.welcomeMessage;
     try {
