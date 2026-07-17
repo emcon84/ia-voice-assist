@@ -1,7 +1,12 @@
-import { processMessage } from "@/services/chatService";
+import { processMessage, type ChatMessage } from "@/services/chatService";
 import { getAssistantById, getActiveAssistant } from "@/assistants/registry";
 import { sendTextMessage } from "@/services/kapsoService";
 import crypto from "crypto";
+
+// ⚠️ Almacenamiento en memoria: se pierde con cold starts de Vercel.
+// Para producción, migrar a Vercel KV, Redis o DB.
+const conversationHistory = new Map<string, ChatMessage[]>();
+const MAX_HISTORY = 50; // mensajes máximos por conversación
 
 export async function POST(req: Request) {
   // 1. Verify webhook signature
@@ -56,19 +61,35 @@ export async function POST(req: Request) {
     return new Response("OK", { status: 200 });
   }
 
+  // 6. Recover conversation history
+  const convId = conversation?.id;
+  const history = convId ? conversationHistory.get(convId) || [] : [];
+  const messages: ChatMessage[] = [
+    ...history,
+    { role: "user", content: text },
+  ];
+
   try {
-    // 6. Process message through the assistant
+    // 7. Process message with full history
     const result = await processMessage(assistant, text, {
-      conversationId: conversation?.id,
+      messages,
+      conversationId: convId,
     });
 
-    // 7. Send reply via Kapso
+    // 8. Store updated history
+    if (convId) {
+      const updated = [...messages, { role: "assistant" as const, content: result.reply }];
+      // Trim to avoid unbounded growth
+      conversationHistory.set(convId, updated.slice(-MAX_HISTORY));
+    }
+
+    // 9. Send reply via Kapso
     await sendTextMessage(phoneNumberId, from, result.reply);
   } catch (err: any) {
     console.error("[whatsapp] Error processing message:", err);
     // Don't fail the webhook - Kapso will retry
   }
 
-  // 8. Always return 200 to Kapso
+  // 10. Always return 200 to Kapso
   return new Response("OK", { status: 200 });
 }
