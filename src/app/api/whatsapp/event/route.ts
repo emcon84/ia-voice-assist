@@ -104,8 +104,10 @@ export async function POST(req: Request) {
 
   const convId = conversation?.id || `conv_${from}`;
 
-  // ── 5. NEW CONVERSATION → send welcome list (no AI, no questionnaire) ──────
-  if (payload.is_new_conversation && assistant.whatsapp?.welcomeMessage) {
+  // ── 5. NEW CONVERSATION (or no history = cold start) → send welcome list ────
+  const hasHistory = convId ? conversationHistory.has(convId) : false;
+  const shouldWelcome = payload.is_new_conversation || !hasHistory;
+  if (shouldWelcome && assistant.whatsapp?.welcomeMessage) {
     const wm = assistant.whatsapp.welcomeMessage;
     try {
       await sendListMessage(phoneNumberId, from, wm.body, wm.buttonText, wm.sections, wm.footer);
